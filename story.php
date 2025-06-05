@@ -23,7 +23,7 @@
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require(__DIR__ . '/../../../config.php');
+require $_SERVER ["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . 'config.php';
 require_once($CFG->dirroot . '/question/editlib.php');
 
 defined('MOODLE_INTERNAL') || die();
