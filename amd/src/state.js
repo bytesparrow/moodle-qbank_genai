@@ -38,6 +38,7 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
     function checkState(intervalId) {
         var userid = $("#qbank_genai_userid")[0].outerText;
         var uniqid = $("#qbank_genai_uniqid")[0].outerText;
+        var courseid = $("#qbank_genai_courseid")[0].outerText;
         var promises = Ajax.call([{
             methodname: 'qbank_genai_check_state',
             args: {
@@ -60,6 +61,7 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
                     var error = '';
                 }
                 Templates.render('qbank_genai/success', { success: successmessage,
+                                                                courseid: courseid,
                                                                 wwwroot: M.cfg.wwwroot,
                                                                 error: error,
                                                                 single: single }).then(function(html) {

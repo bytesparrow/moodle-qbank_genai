@@ -30,6 +30,15 @@ defined('MOODLE_INTERNAL') || die();
 
 core_question\local\bank\helper::require_plugin_enabled('qbank_genai');
 
+
+// courseid als verpflichtenden Parameter vom Typ INTEGER holen
+$courseid = required_param('courseid', PARAM_INT);
+// Kursdaten abrufen
+$course = get_course($courseid);
+// Nutzerberechtigungen prüfen (optional, aber empfohlen)
+require_login($course);
+
+
 list($thispageurl, $contexts, $cmid, $cm, $module, $pagevars) = question_edit_setup('import', '/question/bank/genai/story.php');
 
 list($catid, $catcontext) = explode(',', $pagevars['cat']);
@@ -40,9 +49,11 @@ if (!$qbankcategory = $DB->get_record("question_categories", ['id' => $catid])) 
 $categorycontext = context::instance_by_id($qbankcategory->contextid);
 $qbankcategory->context = $categorycontext;
 
-// This page can be called without courseid or cmid in which case.
+// This page can be called without courseid in which case.
 // We get the context from the category object.
+/* code does not work, since page dies on  = question_edit_setup...
 if ($contexts === null) { // Need to get the course from the chosen category.
+
     $contexts = new core_question\local\bank\question_edit_contexts($categorycontext);
     $thiscontext = $contexts->lowest();
     if ($thiscontext->contextlevel == CONTEXT_COURSE) {
@@ -52,7 +63,7 @@ if ($contexts === null) { // Need to get the course from the chosen category.
         require_login($cm->course, false, $cm);
     }
     $contexts->require_one_edit_tab_cap($edittab);
-}
+}*/
 
 $PAGE->set_url($thispageurl);
 
@@ -73,16 +84,13 @@ $renderer = $PAGE->get_renderer('core_question', 'bank');
 $qbankaction = new \core_question\output\qbank_action_menu($thispageurl);
 echo $renderer->render($qbankaction);
 
-$mform = new \qbank_genai\story_form(null, ['contexts' => $contexts, 'cmid' => $cmid]);
+$mform = new \qbank_genai\story_form(null, ['contexts' => $contexts, 'courseid' => $courseid]);
 
 if ($mform->is_cancelled()) {
-    redirect($CFG->wwwroot . '/question/edit.php?cmid=' . $cmid);
+    redirect($CFG->wwwroot . '/question/edit.php?courseid=' . $courseid);
 } else if ($data = $mform->get_data()) {
 
-    // Call the adhoc task.
-    // we need the courseid anyway so get it from cmid
-    $cm = get_coursemodule_from_id('', $cmid);
-    $courseid = $cm->course;
+    // Call the adhoc task.  
     $task = new \qbank_genai\task\questions();
     if ($task) {
 
@@ -95,7 +103,7 @@ if ($mform->is_cancelled()) {
         // $dbrecord->course = $courseid;
         $dbrecord->numoftries = get_config('qbank_genai', 'numoftries');
         $dbrecord->numofquestions = $data->numofquestions;
-        $dbrecord->aiidentifier = $data->addidentifier;
+        $dbrecord->aiidentifier = empty($data->addidentifier)?false:true;
         $dbrecord->category = $qbankcategory->id;
         $dbrecord->userid = $USER->id;
         $dbrecord->qformat = $data->presetformat;
@@ -137,6 +145,7 @@ if ($mform->is_cancelled()) {
         'uniqid' => $uniqid,
         'userid' => $USER->id,
         'cron' => $cronoverdue,
+        'courseid' => $courseid
     ];
     // Load the ready template.
     echo $OUTPUT->render_from_template('qbank_genai/loading', $datafortemplate);
