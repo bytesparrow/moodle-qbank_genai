@@ -67,7 +67,7 @@ class questions extends \core\task\adhoc_task {
         }
 
         // Create questions.
-        $created = false;
+        $parsedquestions = false;
         $i = 1;
         $error = ''; // Error message.
         $update = new \stdClass();
@@ -75,12 +75,13 @@ class questions extends \core\task\adhoc_task {
         mtrace("[qbank_genai] Creating Questions with AI...\n");
         mtrace("[qbank_genai] Try $i of $numoftries...\n");
 
-        while (!$created && $i <= $numoftries) {
+        while (!$parsedquestions && $i <= $numoftries) {
 
             // First update DB on tries.
             $update->id = $genaiid;
             $update->tries = $i;
             $update->datemodified = time();
+            
             $DB->update_record('qbank_genai', $update);
 
             // Get questions from AI API.
@@ -91,7 +92,7 @@ class questions extends \core\task\adhoc_task {
 
             switch ($dbrecord->qformat) {
                 case "gift":
-                    $created = \qbank_genai\local\gift::parse_questions(
+                    $parsedquestions = \qbank_genai\local\gift::parse_questions(
                         $dbrecord->category,
                         $questions,
                         $dbrecord->numofquestions,
@@ -102,7 +103,7 @@ class questions extends \core\task\adhoc_task {
                     break;
 
                 case "xml":
-                    $created = \qbank_genai\local\xml::parse_questions(
+                    $parsedquestions = \qbank_genai\local\xml::parse_questions(
                         $dbrecord->category,
                         $questions,
                         $dbrecord->numofquestions,
@@ -115,9 +116,19 @@ class questions extends \core\task\adhoc_task {
             $i++;
 
         }
-
+        if($parsedquestions)
+        {
+          $dbquestions = array();
+          foreach($parsedquestions as $pquestion)
+          {
+            $dbquestions[] = array("id"=> $pquestion->id,
+                            "questiontext" => strip_tags($pquestion->name.": ".$pquestion->questiontext ));
+          }
+          $update->createdquestions = json_encode($dbquestions);
+          $DB->update_record('qbank_genai', $update);
+        }
         // If questions were not created.
-        if (!$created) {
+        if (!$parsedquestions) {
             // Insert error info to DB.
             $update = new \stdClass();
             $update->tries = $i - 1;

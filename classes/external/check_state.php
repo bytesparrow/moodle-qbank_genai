@@ -111,7 +111,7 @@ class check_state extends \external_api {
         $info['numoftries'] = $state->numoftries;
         if ($state->success != '') {
             $info['state'] = 1;
-            $info['success'] = $state->success;
+            $info['success'] = $state->createdquestions;
         } else {
             $info['state'] = 0;
             $info['success'] = '';
