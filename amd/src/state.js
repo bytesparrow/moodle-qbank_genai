@@ -36,9 +36,13 @@ define(['jquery', 'core/ajax', 'core/templates'], function($, Ajax, Templates) {
      *  checkState(intervalId);
      */
     function checkState(intervalId) {
-        var userid = $("#qbank_genai_userid")[0].outerText;
-        var uniqid = $("#qbank_genai_uniqid")[0].outerText;
-        var courseid = $("#qbank_genai_courseid")[0].outerText;
+        if(document.getElementById("qbank_genai_userid") === null)
+        {   //nothing to check, value does not exist in DOM
+            return;
+        }
+        var userid = document.getElementById("qbank_genai_userid").textContent.trim();
+        var uniqid = document.getElementById("qbank_genai_uniqid").textContent.trim();
+        var courseid = document.getElementById("qbank_genai_courseid").textContent.trim();
         var promises = Ajax.call([{
             methodname: 'qbank_genai_check_state',
             args: {
