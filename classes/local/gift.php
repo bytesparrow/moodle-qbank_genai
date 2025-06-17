@@ -98,7 +98,7 @@ class gift {
             $created = \question_bank::get_qtype($qtype)->save_question($q, $q);
 
             $update = $DB->get_record('qbank_genai', ['id' => $genaiid]);
-            $update->tries = $update->tries + 1;
+            //would set tries+1 for each question $update->tries = $update->tries + 1;
             $update->success = 1;
             $update->datemodified = time();
             $DB->update_record('qbank_genai', $update);

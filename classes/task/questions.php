@@ -52,7 +52,7 @@ class questions extends \core\task\adhoc_task {
         global $DB;
         // Read numoftries from settings.
         $numoftries = get_config('qbank_genai', 'numoftries');
-
+        
         // Get the data from the task.
         $data = $this->get_custom_data();
 
@@ -77,19 +77,20 @@ class questions extends \core\task\adhoc_task {
 
         while (!$parsedquestions && $i <= $numoftries) {
 
-            // First update DB on tries.
+           
+
+            // Get questions from AI API.
+            $questions = \qbank_genai_get_questions($dbrecord);
+             // now update DB on tries.
             $update->id = $genaiid;
             $update->tries = $i;
             $update->datemodified = time();
             
             $DB->update_record('qbank_genai', $update);
-
-            // Get questions from AI API.
-            $questions = \qbank_genai_get_questions($dbrecord);
-
+                
             $update->llmresponse = $questions->text;
+            $update->datemodified = time();
             $DB->update_record('qbank_genai', $update);
-
             switch ($dbrecord->qformat) {
                 case "gift":
                     $parsedquestions = \qbank_genai\local\gift::parse_questions(
@@ -116,6 +117,7 @@ class questions extends \core\task\adhoc_task {
             $i++;
 
         }
+
         if($parsedquestions)
         {
           $dbquestions = array();
@@ -124,6 +126,9 @@ class questions extends \core\task\adhoc_task {
             $dbquestions[] = array("id"=> $pquestion->id,
                             "questiontext" => strip_tags($pquestion->name.": ".$pquestion->questiontext ));
           }
+          $update = new \stdClass();
+          $update->id = $genaiid;
+          $update->success = 1;
           $update->createdquestions = json_encode($dbquestions);
           $DB->update_record('qbank_genai', $update);
         }
@@ -131,9 +136,10 @@ class questions extends \core\task\adhoc_task {
         if (!$parsedquestions) {
             // Insert error info to DB.
             $update = new \stdClass();
+            $update->id = $genaiid;
             $update->tries = $i - 1;
             $update->timemodified = time();
-            $update->success = 0;
+            $update->success = '0';
             $DB->update_record('qbank_genai', $update);
         }
 
