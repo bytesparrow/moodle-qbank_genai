@@ -59,7 +59,7 @@ function qbank_genai_get_questions($dataobject) {
         [
             "role" => "system",
             "name" => "example_assistant",
-            "content" => "' . $example . '",
+            "content" => " $example ",
         ],
         [
             "role" => "user",
@@ -94,7 +94,6 @@ function qbank_genai_get_questions($dataobject) {
     $options['body'] = $data;
 
     $result = json_decode($httpclient->post($url, $options)->getBody()->getContents());
-
     $questions = new stdClass(); // The questions object.
     if (isset($result->choices[0]->message->content)) {
         $questions->text = $result->choices[0]->message->content;
@@ -221,3 +220,5 @@ function qbank_genai_check_gift($gift) {
     }
     return true;
 }
+
+
