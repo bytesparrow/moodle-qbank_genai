@@ -38,9 +38,8 @@ require_once(__DIR__ . '/../../locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gift {
-
   /**
-   * Parse the gift questions.
+   * 
    *
    * @param int $categoryid
    * @param object $llmresponse
@@ -49,6 +48,19 @@ class gift {
    * @param int $genaiid
    * @param bool $addidentifier
    * @return false|object[]
+   */
+
+  /**
+   * Parse the gift questions.
+   * @global \qbank_genai\local\type $DB
+   * @global \qbank_genai\local\type $CFG
+   * @param int $categoryid
+   * @param object $llmresponse
+   * @param int $numofquestions
+   * @param int $userid
+   * @param bool $addidentifier
+   * @param int $genaiid
+   * @return bool|array 'status' => 'success', "message" => "somemessage, "imported" => array<StdClass> questions
    */
   public static function parse_questions(
     int $categoryid,
@@ -66,93 +78,34 @@ class gift {
     $qformat = new \qformat_gift();
     $allquestionstext = $llmresponse->text;
     $questions = explode("\n\n", $allquestionstext);
-      
-    //ai hat Mist gemeldet
-    if(!strstr($allquestionstext, "::"))
-    {
+
+    //the llm sent garbage
+    if (!strstr($allquestionstext, "::")) {
+      //do a retry
       return false;
     }
-    //gezählte Fragen passen nicht zur Anzahl
+    //count of questions doesn't meet requirement
     if (count($questions) != $numofquestions) {
+      //do a retry
       return false;
     }
 
-    $createdquestions = []; // Array of objects of created questions.
-    foreach ($questions as $question) {
+    $importresult = self::import_gift($allquestionstext, $categoryid, $addidentifier);
 
-      /*     $singlequestion = explode("\n", $question);
-
-        // Manipulating question text manually for question text field.
-        $questiontext = explode('{', $singlequestion[0]);
-
-        $questiontext = trim(preg_replace('/^.*::/', '', $questiontext[0]));
-
-        $qtype = 'match';
-        $q = $qformat->readquestion($singlequestion);
-
-        // Check if question is valid.
-        if (!$q) {
-        return false;
-        }
-        $q->category = $categoryid;
-        $q->createdby = $userid;
-        $q->modifiedby = $userid;
-        $q->timecreated = time();
-        $q->timemodified = time();
-        $q->questiontext = ['text' => "<p>" . $questiontext . "</p>"];
-        $q->questiontextformat = 1;
-        if ($addidentifier == 1) {
-        $q->name = "AI-created: " . $q->name; // Adds a "watermark" to the question
-        }
-        $created = \question_bank::get_qtype($qtype)->save_question($q, $q);
-       */
-      
-    }
-
-      $importsuccess = self::import_gift($allquestionstext, $categoryid, $addidentifier);
-
-      
-      //todo: das created muss nach unten, da das jetzt ne andere logik ist
-      $importsuccesful = $importsuccess['status'] == 'success';
-      $returnvalue = null;
-      
-      if($importsuccesful)
-      {
-        $returnvalue = $importsuccess["imported"];
-       
-      } 
-      return $returnvalue;
-      
-      $update = $DB->get_record('qbank_genai', ['id' => $genaiid]);
-      if(!$importsuccesful)
-      {
-         $update->success = 0;
-      }
-      else
-      {
-        $update->success = 1;
-         $returnvalue = $importsuccess["imported"];
-      }
-     //maybe reactivate:
-      //would set tries+1 for each question $update->tries = $update->tries + 1;
-     
-      $update->datemodified = time();
-      $DB->update_record('qbank_genai', $update);
-      return $returnvalue;
-      $createdquestions[] = $returnvalue;
-
-    return $createdquestions;
+    return $importresult;
   }
 
   /**
-   * das geht tatsächlich is aber hänsslich. schön machen.
+   * new version of import
+   * uses moodle's import feature
+   * $courseid is calculated from $categoryid
    * @global type $USER
    * @global type $CFG
    * @global type $DB
-   * @param type $courseid
    * @param type $gifttext
    * @param type $categoryid
-   * @return type
+   * @param type $addidentifier
+   * @return array 'status' => 'success', "message" => "somemessage, "imported" => array<StdClass> questions
    * @throws \moodle_exception
    */
   public static function import_gift($gifttext, $categoryid, $addidentifier) {
@@ -162,11 +115,6 @@ class gift {
     // Temporäre Datei mit GIFT-Inhalt erzeugen
     $tmpfile = \tempnam(\sys_get_temp_dir(), 'gift_');
     \file_put_contents($tmpfile, $gifttext);
-
-    // Importklasse vorbereiten
-    /*
-      require_once($CFG->dirroot . '/question/format.php');
-      require_once($CFG->dirroot . '/question/format/gift/format.php'); */
 
     $genai_gift = new genai_qformat_gift(); // beachte die abgeleitete Klasse
     $category = $DB->get_record("question_categories", ['id' => $categoryid]);
@@ -193,7 +141,6 @@ class gift {
 
     $category->context = $categorycontext;
 
-    //weitere settings im constructor
     $genai_gift->setCategory($category);
     $genai_gift->setContexts($contexts->having_one_edit_tab_cap('import'));
     $genai_gift->setCourse($COURSE);
@@ -205,16 +152,22 @@ class gift {
     $genai_gift->setStoponerror(false);
 
 
+    ob_start();
+    $importsuccess = $genai_gift->importprocess();
+    $message = ob_get_clean();
 
+    $cleanedmessage = str_replace(array('Systemnachricht schließen', '&times;'), '', strip_tags($message));
 
     // Import durchführen
-    if (!$genai_gift->importprocess()) {
+    if (!$importsuccess) {
       \unlink($tmpfile);
-      return array('status' => 'error');
+      return array('status' => 'error', "message" => $cleanedmessage);
     }
 
+    //that's else: success
     $imported_questions = self::get_recent_imported_questions($courseid, $categoryid);
     if (count($imported_questions)) {
+      //change question name if $addidentifier is set
       if ($addidentifier) {
         foreach ($imported_questions as &$q) {
           $q->name = 'AI-created: ' . $q->name;
@@ -227,20 +180,11 @@ class gift {
         }
       }
     }
-    $return_ar = array('status' => 'success');
+    $return_ar = array('status' => 'success', "message" => $cleanedmessage);
     $return_ar["imported"] = $imported_questions;
-    
+
     \unlink($tmpfile);
     return $return_ar;
-
-/*
-
-    return $imported_questions;
-    return [
-      'status' => 'success',
-      'imported' => \count($genai_gift->questions)
-    ];
- */
   }
 
   public static function get_recent_imported_questions(int $courseid, int $categoryid): array {
