@@ -97,6 +97,7 @@ https://docs.moodle.org/en/Cron#Setting_up_cron_on_your_system
 $string['createdquestionsuccess'] = 'Frage erfolgreich erstellt';
 $string['createdquestionssuccess'] = 'Fragen erfolgreich erstellt';
 $string['errornotcreated'] = 'Fehler: Fragen wurden nicht erstellt';
+$string['aicreatedtag'] = '[KI-Frage] ';
 
 // Voreinstellungen (Beispiele).
 $string['presetnamedefault1'] = "Multiple-Choice-Frage (Englisch)";

@@ -3,7 +3,7 @@
     "description": "This plugin allows you to automatically create questions on a given text using a large language model",
     "license": "GPL-3.0-or-later",
     "type": "moodle-qbank",
-    "version": "v1.0-alpha3",
+    "version": "v1.0-alpha4",
     "require": {
         "composer/installers": "~2.2"
     }

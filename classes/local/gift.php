@@ -166,16 +166,18 @@ class gift {
 
     //that's else: success
     $imported_questions = self::get_recent_imported_questions($courseid, $categoryid);
+
     if (count($imported_questions)) {
       //change question name if $addidentifier is set
       if ($addidentifier) {
         foreach ($imported_questions as &$q) {
-          $q->name = 'AI-created: ' . $q->name;
-
+          $q->name = get_string('aicreatedtag', 'qbank_genai') . $q->name;
+          $q->questiontext = get_string('aicreatedtag', 'qbank_genai').$q->questiontext;
           // Datenbankeintrag aktualisieren
           $record = new \stdClass();
           $record->id = $q->id;
           $record->name = $q->name;
+          $record->questiontext = $q->questiontext;
           $DB->update_record('question', $record);
         }
       }
