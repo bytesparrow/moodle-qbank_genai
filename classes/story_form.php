@@ -132,7 +132,7 @@ class story_form extends \moodleform {
                 'wrap="virtual" rows="10" cols="50"'
             );
             $mform->setType('primer' . $i, PARAM_RAW);
-            $mform->setDefault('primer' . $i, get_config('qbank_genai', 'presettprimer' . $primer));
+            $mform->setDefault('primer' . $i, format_text(get_config('qbank_genai', 'presettprimer' . $primer), FORMAT_HTML));
             $mform->addHelpButton('primer' . $i, 'primer', 'qbank_genai');
             $mform->hideif('primer' . $i, 'editpreset');
             $mform->hideif('primer' . $i, 'preset', 'neq', $i);
@@ -145,7 +145,7 @@ class story_form extends \moodleform {
                 'wrap="virtual" rows="10" cols="50"'
             );
             $mform->setType('instructions' . $i, PARAM_RAW);
-            $mform->setDefault('instructions' . $i, get_config('qbank_genai', 'presetinstructions' . $primer));
+            $mform->setDefault('instructions' . $i, format_text(get_config('qbank_genai', 'presetinstructions' . $primer), FORMAT_HTML));
             $mform->addHelpButton('instructions' . $i, 'instructions', 'qbank_genai');
             $mform->hideif('instructions' . $i, 'editpreset');
             $mform->hideif('instructions' . $i, 'preset', 'neq', $i);
@@ -158,7 +158,7 @@ class story_form extends \moodleform {
                 'wrap="virtual" rows="10" cols="50"'
             );
             $mform->setType('example' . $i, PARAM_RAW);
-            $mform->setDefault('example' . $i, get_config('qbank_genai', 'presetexample' . $primer));
+            $mform->setDefault('example' . $i, format_text(get_config('qbank_genai', 'presetexample' . $primer), FORMAT_HTML));
             $mform->addHelpButton('example' . $i, 'example', 'qbank_genai');
             $mform->hideif('example' . $i, 'editpreset');
             $mform->hideif('example' . $i, 'preset', 'neq', $i);

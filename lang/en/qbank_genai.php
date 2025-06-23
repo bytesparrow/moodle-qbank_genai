@@ -97,6 +97,8 @@ https://docs.moodle.org/en/Cron#Setting_up_cron_on_your_system
 $string['createdquestionsuccess'] = 'Created question successfully';
 $string['createdquestionssuccess'] = 'Created questions successfully';
 $string['errornotcreated'] = 'Error: questions were not created';
+$string['aicreatedtag'] = 'AI-created: ';
+
 
 // Preset defaults.
 $string['presetnamedefault1'] = "Multiple choice question (english)";
