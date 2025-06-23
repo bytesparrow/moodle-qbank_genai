@@ -112,6 +112,7 @@ class gift {
     global $USER, $CFG, $DB;
 
 
+    $gifttext = html_entity_decode($gifttext);
     // Temporäre Datei mit GIFT-Inhalt erzeugen
     $tmpfile = \tempnam(\sys_get_temp_dir(), 'gift_');
     \file_put_contents($tmpfile, $gifttext);
