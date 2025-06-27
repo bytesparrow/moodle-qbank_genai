@@ -28,6 +28,7 @@ namespace qbank_genai\task;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once(__DIR__ . '/../../locallib.php');
 //important line! Random "class not found" errors without it!
 require_once($CFG->dirroot . '/question/engine/bank.php');
 
@@ -79,10 +80,9 @@ class questions extends \core\task\adhoc_task {
     while (!$parsingresult && $i <= $numoftries) {
 
 
-
       // Get questions from AI API.
       $questions = \qbank_genai_get_questions($dbrecord);
-      
+     
 // now update DB on tries.
       $update->id = $genaiid;
       $update->tries = $i;
