@@ -28,7 +28,8 @@ namespace qbank_genai\task;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . '/../../locallib.php');
+//important line! Random "class not found" errors without it!
+require_once($CFG->dirroot . '/question/engine/bank.php');
 
 /**
  * The question generator adhoc task.
@@ -93,6 +94,7 @@ class questions extends \core\task\adhoc_task {
       $update->datemodified = time();
       $DB->update_record('qbank_genai', $update);
 
+
       switch ($dbrecord->qformat) {
         case "gift":
           $parsingresult = \qbank_genai\local\gift::parse_questions(
@@ -105,7 +107,7 @@ class questions extends \core\task\adhoc_task {
           );
           break;
 
-        case "xml":
+        case "moodlexml":
           $parsingresult = \qbank_genai\local\xml::parse_questions(
               $dbrecord->category,
               $questions,
@@ -114,6 +116,9 @@ class questions extends \core\task\adhoc_task {
               $dbrecord->aiidentifier,
               $dbrecord->id
           );
+          break;
+        default:
+          $parsingresult = array("status" => "error", "message" => "the format $dbrecord->qformat is not supported");
           break;
       }
       $i++;
