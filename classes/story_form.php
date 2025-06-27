@@ -114,10 +114,6 @@ class story_form extends \moodleform {
             \qbank_genai\task\questions::PARAM_GENAI_GIFT => get_string('gift_format', 'qbank_genai'),
             \qbank_genai\task\questions::PARAM_GENAI_XML => get_string('xml_format', 'qbank_genai'),
         ];
-        $mform->addElement('select', 'presetformat', get_string('presetformat', 'qbank_genai'), $formatoptions);
-        $mform->setDefault('presetformat', \qbank_genai\task\questions::PARAM_GENAI_GIFT);
-        $mform->addHelpButton('presetformat', 'example', 'qbank_genai');
-        $mform->hideif('presetformat', 'editpreset');
 
         // Create elements for all presets.
         for ($i = 0; $i < 10; $i++) {
@@ -170,7 +166,7 @@ class story_form extends \moodleform {
         ];
         $mform->addElement('select', 'presetformat'. $i, get_string('presetformat', 'qbank_genai'), $formatoptions);
         $mform->setDefault('presetformat'. $i, get_config('qbank_genai', 'presetformat' . $primer));
-        $mform->addHelpButton('presetformat', 'example', 'qbank_genai');
+        $mform->addHelpButton('presetformat'. $i, 'example', 'qbank_genai');
         $mform->hideif('presetformat'. $i, 'editpreset');
         $mform->hideif('presetformat' . $i, 'preset', 'neq', $i);
         }
