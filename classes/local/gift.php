@@ -25,10 +25,7 @@
  */
 
 namespace qbank_genai\local;
-
-#use qbank_genai\local\genai_qformat_gift;
-require_once(__DIR__ . '/../../locallib.php');
-
+require_once(__DIR__.'/generalimporter.php');
 /**
  * Class to handle gift format.
  *
@@ -37,7 +34,7 @@ require_once(__DIR__ . '/../../locallib.php');
  * @author     Dr. Peter Mayer
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class gift {
+class gift extends generalimporter{
   /**
    * 
    *
@@ -165,73 +162,15 @@ class gift {
       return array('status' => 'error', "message" => $cleanedmessage);
     }
 
+    
     //that's else: success
-    $imported_questions = self::get_recent_imported_questions($courseid, $categoryid);
-
-    if (count($imported_questions)) {
-      //change question name if $addidentifier is set
-      if ($addidentifier) {
-        foreach ($imported_questions as &$q) {
-          $q->name = get_string('aicreatedtag', 'qbank_genai') . $q->name;
-          $q->questiontext = get_string('aicreatedtag', 'qbank_genai').$q->questiontext;
-          // Datenbankeintrag aktualisieren
-          $record = new \stdClass();
-          $record->id = $q->id;
-          $record->name = $q->name;
-          $record->questiontext = $q->questiontext;
-          $DB->update_record('question', $record);
-        }
-      }
-    }
+    $imported_and_processed_questions = self::process_recently_imported_questions($courseid, $categoryid, $addidentifier);
+      
     $return_ar = array('status' => 'success', "message" => $cleanedmessage);
-    $return_ar["imported"] = $imported_questions;
+    $return_ar["imported"] = $imported_and_processed_questions;
 
     \unlink($tmpfile);
     return $return_ar;
-  }
-
-  public static function get_recent_imported_questions(int $courseid, int $categoryid): array {
-    global $DB;
-
-    $since = time() - 10;
-
-    $sql = "
-        SELECT q.id, q.name, q.qtype, q.questiontext, q.timecreated, q.timemodified
-        FROM {question} q
-        JOIN {question_versions} v ON v.questionid = q.id
-        JOIN {question_bank_entries} e ON e.id = v.questionbankentryid
-        JOIN {question_categories} c ON c.id = e.questioncategoryid
-        WHERE c.id = :catid
-          AND c.contextid = :contextid
-          AND q.timemodified >= :since
-        ORDER BY q.timemodified DESC
-    ";
-
-    // Kontext-ID für den Kurs (in Moodle 4.5 zwingend relevant)
-    $context = \context_course::instance($courseid);
-
-    $params = [
-      'catid' => $categoryid,
-      'contextid' => $context->id,
-      'since' => $since,
-    ];
-
-    $records = $DB->get_records_sql($sql, $params);
-
-    // Rückgabe als Array von StdClass-Objekten
-    $result = [];
-    foreach ($records as $q) {
-      $obj = new \StdClass();
-      $obj->id = $q->id;
-      $obj->name = $q->name;
-      $obj->qtype = $q->qtype;
-      $obj->questiontext = $q->questiontext;
-      $obj->created = userdate($q->timecreated);
-      $obj->modified = userdate($q->timemodified);
-      $result[] = $obj;
-    }
-
-    return $result;
   }
 
 }

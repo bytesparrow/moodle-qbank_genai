@@ -25,7 +25,7 @@
  */
 
 namespace qbank_genai\local;
-
+require_once(__DIR__.'/generalimporter.php');
 /**
  * Class to handle xml format.
  *
@@ -34,7 +34,7 @@ namespace qbank_genai\local;
  * @author     Dr. Peter Mayer
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class xml {
+class xml extends generalimporter{
 
   /**
    * Parse the xml questions.
@@ -131,9 +131,19 @@ class xml {
     mtrace("[qbank_genai] cleanedmessage is: $cleanedmessage...\n");
     // Import durchführen
     if (!$importsuccess) {
-         \unlink($tmpfile);
+         \unlink($importfile);
       return array('status' => 'error', "message" => $cleanedmessage);
     }
+    
+    
+    //that's else: success
+    $imported_and_processed_questions = self::process_recently_imported_questions($courseid, $categoryid, $addidentifier);
+      
+    $return_ar = array('status' => 'success', "message" => $cleanedmessage);
+    $return_ar["imported"] = $imported_and_processed_questions;
+
+    \unlink($importfile);
+    return $return_ar;
     
     \unlink($tmpfile);
     $return_ar = array('status' => 'success', "message" => $cleanedmessage);
