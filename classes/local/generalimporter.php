@@ -43,7 +43,7 @@ abstract class generalimporter {
     global $DB;
 
     $imported_questions = self::get_recent_imported_questions($courseid, $categoryid);
-
+    mtrace("[qbank_genai] got ".count($imported_questions)." questions...\n");
     if (count($imported_questions)) {
       //change question name if $addidentifier is set
       if ($addidentifier) {

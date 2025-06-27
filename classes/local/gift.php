@@ -155,7 +155,7 @@ class gift extends generalimporter{
     $message = ob_get_clean();
 
     $cleanedmessage = str_replace(array('Systemnachricht schließen', '&times;'), '', strip_tags($message));
-
+    mtrace("[qbank_genai] cleanedmessage is: $cleanedmessage...\n");
     // Import durchführen
     if (!$importsuccess) {
       \unlink($tmpfile);
