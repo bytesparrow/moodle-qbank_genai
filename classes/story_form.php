@@ -162,6 +162,17 @@ class story_form extends \moodleform {
             $mform->addHelpButton('example' . $i, 'example', 'qbank_genai');
             $mform->hideif('example' . $i, 'editpreset');
             $mform->hideif('example' . $i, 'preset', 'neq', $i);
+            
+                   // Format.
+        $formatoptions = [
+            \qbank_genai\task\questions::PARAM_GENAI_GIFT => get_string('gift_format', 'qbank_genai'),
+            \qbank_genai\task\questions::PARAM_GENAI_XML => get_string('xml_format', 'qbank_genai'),
+        ];
+        $mform->addElement('select', 'presetformat'. $i, get_string('presetformat', 'qbank_genai'), $formatoptions);
+        $mform->setDefault('presetformat'. $i, get_config('qbank_genai', 'presetformat' . $primer));
+        $mform->addHelpButton('presetformat', 'example', 'qbank_genai');
+        $mform->hideif('presetformat'. $i, 'editpreset');
+        $mform->hideif('presetformat' . $i, 'preset', 'neq', $i);
         }
 
        

@@ -77,7 +77,6 @@ $PAGE->set_pagelayout('standard');
 $PAGE->requires->js_call_amd('qbank_genai/state');
 
 echo $OUTPUT->header();
-
 // Print horizontal nav if needed.
 $renderer = $PAGE->get_renderer('core_question', 'bank');
 
@@ -106,7 +105,7 @@ if ($mform->is_cancelled()) {
         $dbrecord->aiidentifier = empty($data->addidentifier)?false:true;
         $dbrecord->category = $qbankcategory->id;
         $dbrecord->userid = $USER->id;
-        $dbrecord->qformat = $data->presetformat;
+        $dbrecord->qformat = $data->{'presetformat' . $preset};
         $dbrecord->timecreated = time();
         $dbrecord->timemodified = 0;
         $dbrecord->tries = 0;
@@ -135,6 +134,7 @@ if ($mform->is_cancelled()) {
     } else {
         $error = get_string('taskerror', 'qbank_genai');
     }
+    
     // Check if the cron is overdue.
     $lastcron = get_config('tool_task', 'lastcronstart');
     $cronoverdue = ($lastcron < time() - 3600 * 24);
